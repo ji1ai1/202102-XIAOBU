@@ -853,7 +853,7 @@ for 甲 in range(折數):
 
 
 輕模型 = lightgbm.train(train_set=lightgbm.Dataset(訓練資料表.iloc[:, 2:], label=訓練資料表.標籤)
-	, num_boost_round=4000, params={"objective": "binary", "learning_rate": 0.03, "max_depth": 6, "num_leaves": 32, "verbose": -1})
+	, num_boost_round=4096, params={"objective": "binary", "learning_rate": 0.03, "max_depth": 6, "num_leaves": 32, "verbose": -1})
 
 with open("資料/輕模型", "wb") as 档案:
 	pickle.dump(輕模型, 档案)
