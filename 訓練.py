@@ -443,7 +443,6 @@ with open("資料/詞字典", "wb") as 档案:
 訓練異句三詞表.columns = ["標識", "上下句", "異句三詞序號", "異句三詞"]
 
 
-批大小 = 128
 def 取得資料表(
 	某表
 	, 某上下首詞特征表, 某上下末詞特征表, 某上下異句首詞特征表, 某上下異句末詞特征表
@@ -547,32 +546,7 @@ def 取得資料表(
 	]:
 		某資料表["%s_max" % 列] = 某表.loc[:, ["上%s" % 列, "下%s" % 列]].max(axis=1)
 
-	某預測 = []
-	批上下句 = []
-	批下上句 = []
-	for 丙, 丙列 in enumerate(某表.itertuples()):
-		上下句 = [2] + 丙列.上句 + [2] + 丙列.下句
-		下上句 = [2] + 丙列.下句 + [2] + 丙列.上句
-		句詞數 = len(上下句)
-		if 句詞數 < 句長:
-			上下句 = numpy.pad(上下句, pad_width=(0, 句長 - 句詞數)).astype(numpy.int64)
-			下上句 = numpy.pad(下上句, pad_width=(0, 句長 - 句詞數)).astype(numpy.int64)
-		else:
-			上下句 = numpy.array(上下句[:句長]).astype(numpy.int64)
-			下上句 = numpy.array(下上句[:句長]).astype(numpy.int64)
-
-		批上下句 += [上下句]
-		批下上句 += [下上句]
-		if len(批上下句) >= 批大小 or 丙 == len(某表) - 1:
-			輸出 = 某神模型(
-				torch.tensor(numpy.array(批上下句)).to(裝置)
-				, torch.tensor(numpy.array(批下上句)).to(裝置)
-			)
-			某預測 += 輸出.data.cpu().numpy().tolist()
-			批上下句 = []
-			批下上句 = []
-
-	某資料表["神預測打分"] = 某預測
+	某資料表["神預測打分"] = 0
 
 	某資料表 = 某資料表.merge(某詞資料表, on="標識", how="left")
 	某資料表 = 某資料表.merge(某交叉詞資料表, on="標識", how="left")
