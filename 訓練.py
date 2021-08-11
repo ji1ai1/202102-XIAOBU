@@ -9,7 +9,6 @@ import requests
 import sklearn
 import sklearn.metrics
 import time
-import torch
 import transformers
 import warnings
 import zipfile
@@ -682,48 +681,6 @@ with open("資料/特征字典", "wb") as 档案:
 		, 異句三詞特征字典, 異句交叉三詞特征字典
 		, 前後詞特征字典)
 	, 档案)
-
-裝置 = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-損失函式 = torch.nn.BCELoss().to(裝置)
-class 類別_神模型(torch.nn.Module):
-	def __init__(self):
-		super(類別_神模型, self).__init__()
-
-		self.BERT層 = transformers.BertModel.from_pretrained("資料/nezha")
-		self.BERT層.config.max_position_embeddings = 句長
-		self.BERT層.config.vocab_size = 詞數
-		self.BERT層.embeddings.position_ids = torch.tensor([range(句長)])
-		詞嵌入 = torch.nn.Embedding(詞數, 嵌入維數)
-		詞嵌入.weight.data[0] = self.BERT層.embeddings.word_embeddings.weight[0]
-		詞嵌入.weight.data[1:5] = self.BERT層.embeddings.word_embeddings.weight[100:104]
-		詞嵌入.weight.data[5:] = torch.nn.init.normal_(torch.Tensor(詞數 - 5, 嵌入維數).to(裝置)
-			, mean=self.BERT層.embeddings.word_embeddings.weight[107:].mean().tolist()
-			, std=self.BERT層.embeddings.word_embeddings.weight[107:].std().tolist()
-		)
-		self.BERT層.embeddings.word_embeddings = 詞嵌入
-		
-		self.線性層 = torch.nn.Linear(嵌入維數, 1)
-		self.遮罩第一線性層 = torch.nn.Linear(嵌入維數, 嵌入維數)
-		self.遮罩歸一化層 = torch.nn.LayerNorm(嵌入維數)
-		self.遮罩第二線性層 = torch.nn.Linear(嵌入維數, 詞數)
-		self.to(裝置)
-
-	def forward(self, 某上下句輸入, 某下上句輸入, 某遮罩句輸入 = None):
-		if 某遮罩句輸入 is not None:
-			某輸出 = self.BERT層(某遮罩句輸入, output_attentions=False, output_hidden_states=False, return_dict=False)[0]
-			某輸出 = 某輸出.flatten(0, 1)
-			某輸出 = torch.relu(self.遮罩第一線性層(某輸出))
-			某輸出 = self.遮罩歸一化層(某輸出)
-			某輸出 = torch.softmax(self.遮罩第二線性層(某輸出), dim=1)
-			return 某輸出
-
-		某上句輸出 = self.BERT層(某上下句輸入, output_attentions=False, output_hidden_states=False, return_dict=False)[1]
-		某下句輸出 = self.BERT層(某下上句輸入, output_attentions=False, output_hidden_states=False, return_dict=False)[1]
-		某輸出 = 某上句輸出 + 某下句輸出
-		某輸出 = torch.sigmoid(self.線性層(某輸出)).squeeze(-1)
-
-		return 某輸出
-
 
 
 折數 = 2
